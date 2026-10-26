@@ -21,3 +21,5 @@ reports/*.zip
 reports/*.log
 reports/*.y4m
 public/pose.worker.js
+public/packed/
+src/generated-assets.json

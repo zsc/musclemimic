@@ -5,6 +5,8 @@ import {VideoSync} from './video-sync.js';
 import {setupCamera} from './camera.js';
 import {setupRecording} from './recording.js';
 import {savedResults,saveResult,deleteResult,archiveResult} from './result-store.js';
+import {loadGeometry} from './assets.js';
+const staticSite=import.meta.env.VITE_STATIC_SITE==='1';
 const $=id=>document.getElementById(id);
 const base=new URL(import.meta.env.BASE_URL,location.href).href;
 const videoSync=new VideoSync($('source-video'),$('video-status'));
@@ -12,6 +14,7 @@ const worker=new Worker(new URL('./simulation.worker.js',import.meta.url),{type:
 let ready=false,playing=false,completed=false,lastReport=null,lastMetrics=null,seq=0,frames=0,lastFpsTime=performance.now();
 let recordingResult=null,duration=1.5,switching=false,bufferedSnapshot=null,selectedId='original';
 let history=[];const historyURLs=new Map();
+let sceneReady=false;
 const pending=new Map();
 const log=s=>{$('log').textContent+='['+new Date().toLocaleTimeString()+'] '+s+'\n';};
 const send=(type,data={})=>worker.postMessage({type,...data});
@@ -66,11 +69,11 @@ function playLabel(){
 }
 function pausePlayback(){videoSync.stop();send('pause');playing=false;playLabel();}
 function failure(message){pausePlayback();ready=false;$('loading').hidden=false;$('loading-title').textContent='模型未能启动';$('loading-text').textContent=message+'。可在左侧参数中切换 WASM CPU 重试。';$('loading').classList.add('failed');playLabel();$('backend-pill').textContent='运行错误';log(message);}
-function showSnapshot(m){updateScene(m.snapshot);$('policy-ms').textContent=m.timing.policy.p50.toFixed(2)+' ms';$('physics-ms').textContent=m.timing.physics.p50.toFixed(2)+' ms';$('realtime-factor').textContent=m.timing.step.mean?(10/m.timing.step.mean).toFixed(2)+'×':'—';}
+function showSnapshot(m){if(!sceneReady){bufferedSnapshot=m;return;}updateScene(m.snapshot);$('policy-ms').textContent=m.timing.policy.p50.toFixed(2)+' ms';$('physics-ms').textContent=m.timing.physics.p50.toFixed(2)+' ms';$('realtime-factor').textContent=m.timing.step.mean?(10/m.timing.step.mean).toFixed(2)+'×':'—';}
 worker.onerror=e=>failure(e.message);
 worker.onmessage=({data:m})=>{
  if(m.type==='progress'){$('loading-text').textContent=m.text;log(m.text);}
- if(m.type==='ready'){ready=true;$('loading').hidden=true;$('export-report').disabled=false;playLabel();$('backend-pill').textContent=(m.backend==='webgpu'?'WebGPU':'WASM CPU')+' · MuJoCo';$('device-info').textContent=[m.adapterInfo.vendor,m.adapterInfo.architecture,m.adapterInfo.description].filter(Boolean).join(' · ')+' · 控制 100 Hz / 物理 500 Hz';log('后端就绪：'+JSON.stringify(m));}
+ if(m.type==='ready'){ready=sceneReady;$('loading').hidden=ready;$('export-report').disabled=false;playLabel();$('backend-pill').textContent=(m.backend==='webgpu'?'WebGPU':'WASM CPU')+' · MuJoCo';$('device-info').textContent=[m.adapterInfo.vendor,m.adapterInfo.architecture,m.adapterInfo.description].filter(Boolean).join(' · ')+' · 控制 100 Hz / 物理 500 Hz';log('后端就绪：'+JSON.stringify(m));}
  if(m.type==='snapshot'){if(switching)bufferedSnapshot=m;else showSnapshot(m);}
  if(m.type==='complete'){videoSync.stop();playing=false;completed=true;lastReport=m.report;chartPoints=m.report.errors_mm.slice();drawChart();playLabel();log('完成：'+JSON.stringify(m.report.metrics));}
  if(m.type==='auditProgress')log(`验收 ${m.completed}/${m.total}：${JSON.stringify(m.result)}`);
@@ -107,15 +110,19 @@ $('export-report').onclick=async()=>{
 };
 window.__demo={get ready(){return ready},get metrics(){return lastMetrics},get recording(){return recordingResult},get history(){return history.map(({id,title})=>({id,title}))},rpc,reset,config};
 async function boot(){
- const response=await fetch(new URL('geometry.json',base));if(!response.ok)throw Error('骨骼几何资源加载失败');const g=await response.json();
- const geometries=g.meshes.map(item=>{const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(item.vertices.flat(),3));geometry.setIndex(item.faces.flat());geometry.computeVertexNormals();return geometry;});
+ const loading=rpc('load',config());loading.catch(()=>{});
+ const g=await loadGeometry(base);
+ const geometries=g.meshes.map(item=>{const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(item.vertices,3));geometry.setIndex(new THREE.BufferAttribute(item.faces,1));geometry.computeVertexNormals();return geometry;});
  const bone=new THREE.MeshStandardMaterial({color:0xd9cfb6,roughness:.8,metalness:.05});
  const ghost=new THREE.MeshStandardMaterial({color:0x84b9cc,roughness:.8,transparent:true,opacity:.42,depthWrite:false});
  for(const item of g.geoms){const a=new THREE.Mesh(geometries[item.mesh],bone),r=new THREE.Mesh(geometries[item.mesh],ghost);a.matrixAutoUpdate=false;r.matrixAutoUpdate=false;actual.add(a);reference.add(r);actualMeshes.push({mesh:a,id:item.id});referenceMeshes.push({mesh:r,id:item.id});}
+ sceneReady=true;
  $('source-video').src=new URL('source.mp4',base).href;
- const requested=new URLSearchParams(location.search).get('backend');if(['wasm','webgpu'].includes(requested))$('backend').value=requested;
- await rpc('load',config());
+ await loading;
+ if(bufferedSnapshot){showSnapshot(bufferedSnapshot);bufferedSnapshot=null;}
+ ready=true;$('loading').hidden=true;playLabel();
 }
+const requested=new URLSearchParams(location.search).get('backend');if(['wasm','webgpu'].includes(requested))$('backend').value=requested;
 const cameraController=setupCamera(base,pausePlayback);
 const initialBoot=boot();initialBoot.catch(e=>failure(e.message));
 function setDuration(seconds){duration=seconds;$('duration-label').textContent=' / '+seconds.toFixed(2)+' s';$('chart-duration').textContent=seconds.toFixed(2)+' s';$('seek').max=Math.round(seconds*100);}
@@ -145,7 +152,7 @@ async function selectResult(id,autoplay=false){
    setDuration(1.5);$('source-video').src=new URL('source.mp4',base).href;
    await rpc('restoreExample',config());$('backend-pill').textContent=($('backend').value==='webgpu'?'WebGPU':'WASM CPU')+' · MuJoCo';
    $('result-kind').textContent='实时仿真';$('recording-result').classList.remove('warning');
-   $('recording-summary').textContent='内置参考已就绪，点击播放；或在左侧生成你的动作。';
+   $('recording-summary').textContent=staticSite?'浏览器实时计算肌肉控制与物理仿真。':'内置参考已就绪，点击播放；或在左侧生成你的动作。';
    $('device-info').textContent='控制 100 Hz · 物理 500 Hz · 此浏览器实时计算。';
   }
   $('result-select').value=id;$('delete-result').disabled=!entry;
@@ -163,11 +170,21 @@ $('delete-result').onclick=async()=>{
 };
 const historyReady=(async()=>{
  try{history=await savedResults();renderHistory();if(history.length)await selectResult(history[0].id);
-  void (async()=>{for(const entry of history.slice())try{await archiveResult(base,entry);}catch(e){log('本机自动归档失败：'+e.message);}})();
+  if(!staticSite)void (async()=>{for(const entry of history.slice())try{await archiveResult(base,entry);}catch(e){log('本机自动归档失败：'+e.message);}})();
  }
  catch(e){log('历史记录暂不可用：'+e.message);$('history-count').textContent='本次会话';}
 })();
-setupRecording(base,cameraController,async(result,clip,signal)=>{
+if(staticSite){
+ $('input-source').replaceChildren(new Option('内置示例 · 实时肌骨仿真','example'));
+ $('input-placeholder').hidden=true;$('upload-zone').hidden=true;
+ $('input-video').hidden=false;$('input-video').src=new URL('source.mp4',base).href;
+ $('input-name').textContent='公开示例 · 点击启动同步播放';
+ $('recording-status').textContent='在线版支持示例仿真。摄像头／上传视频生成请使用本机版。';
+ $('recording-summary').textContent='浏览器实时计算肌肉控制与物理仿真。';
+ document.querySelector('footer span:nth-child(2)').textContent='在线示例 · 无需后端';
+ $('run').disabled=true;initialBoot.then(()=>{$('run').disabled=false;}).catch(()=>{});
+ $('run').onclick=()=>selectResult('original',true).catch(e=>failure(e.message));
+}else setupRecording(base,cameraController,async(result,clip,signal)=>{
  await initialBoot;await historyReady;signal.throwIfAborted();
  const entry={id:result.recordingId||crypto.randomUUID(),created:Date.now(),title:clip.title,result,video:clip.blob||null};
  let expired=[];

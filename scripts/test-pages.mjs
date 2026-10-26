@@ -1,0 +1,32 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+const url=process.argv[2]||'http://127.0.0.1:4187/musclelab/';
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
+try{
+ const context=await browser.newContext(),page=await context.newPage({viewport:{width:1440,height:900}}),errors=[],requests=[],bad=[];
+ const pending=[];let phase='cold';
+ context.on('requestfinished',r=>pending.push((async()=>{const response=await r.response();requests.push({phase,url:r.url(),...(await r.sizes())});if(response.status()>=400)bad.push([r.url(),response.status()]);})()));
+ page.on('pageerror',e=>errors.push(e.message));
+ const begin=Date.now();await page.goto(url,{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>window.__demo?.ready,null,{timeout:180000});
+ const coldReadyMs=Date.now()-begin;
+ assert.equal(await page.locator('#input-source option').count(),1);
+ assert.equal(await page.locator('#input-source').inputValue(),'example');
+ await page.locator('#run').click();await page.waitForFunction(()=>window.__demo.metrics?.complete);
+ const report=await page.evaluate(()=>window.__demo.rpc('report'));
+ assert.equal(report.live_policy,true);assert.equal(report.metrics.complete,true);assert.equal(report.metrics.finite,true);
+ await page.screenshot({path:'reports/pages-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+ await page.screenshot({path:'reports/pages-mobile.png',fullPage:true});
+ await Promise.all(pending);phase='warm';
+ const warm=Date.now();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__demo?.ready,null,{timeout:180000});
+ const warmReadyMs=Date.now()-warm;
+ await Promise.all(pending);
+ assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);
+ assert.ok(!requests.some(r=>/\/api\//.test(r.url)));
+ assert.ok(!requests.some(r=>/\/model\/assets\//.test(r.url)));
+ const result={url,coldReadyMs,warmReadyMs,errors,bad,metrics:report.metrics,requests};
+ await writeFile('reports/pages-smoke.json',JSON.stringify(result,null,2));
+ console.log(JSON.stringify({url,coldReadyMs,warmReadyMs,requests:requests.length,errors,metrics:report.metrics},null,2));
+}finally{await browser.close();}

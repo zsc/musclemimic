@@ -75,7 +75,13 @@ npm run test:browser -- wasm
 
 ## 静态部署
 
-`dist/` 可以静态部署原始实验和实时二维姿态预览。**录制肌骨处理需要本机 Node/Python 服务，单独部署静态文件不能运行这部分。** MediaPipe、MuJoCo、ORT 和模型由本地资源提供，无 CDN。没有发布本次改动到 GitHub 或网站。
+GitHub Pages 必须发布 Vite 构建后的 `dist/`，不能直接发布仓库根目录的源码 HTML。仓库 Settings → Pages → Source 选择 **GitHub Actions**；推送 `main` 自动执行 `.github/workflows/pages.yml`，也可手动运行。流程检出 LFS 模型、安装依赖、构建、检查产物并部署。
+
+线上构建设置 `VITE_STATIC_SITE=1`：默认展示内置示例，一键启动真实浏览器肌肉控制与物理仿真，不请求本机 API，也不声称可写入访问者的磁盘。**录制肌骨处理仍需要本机 Node/Python 服务，Pages 不提供这个后端。** 本机 `npm run demo` 不设置此变量，保留摄像头、上传、历史及自动归档。
+
+构建时将渲染几何从 JSON 转成等价 Float32/Uint32 数组并压缩（约 15.2 MB → 2.9 MB）；71 个物理模型文件合并成一个约 3.8 MB 的压缩包。策略、参考、初始状态与 WASM 无损压缩，浏览器下载后解压，物理文件和模型权重逐字节保持一致。主线程几何、Worker 物理模型和策略初始化并行，资源文件名含内容哈希，更新时不会混用旧缓存。策略本身仍需下载约 35.3 MB，首次访问时间仍取决于网络。
+
+`node scripts/check-pages-build.mjs` 检查产物和无损还原；`node scripts/test-pages.mjs URL` 在隔离 Chrome 中检查静态站点启动、完整仿真、手机布局、冷启动／重复访问时间及错误请求。资源均随站点发布，不依赖运行时第三方 CDN。
 
 模型、视频和依赖的来源与许可见 `public/ATTRIBUTION.html`、`public/licenses/`。限非商用研究演示；肌肉激活是模型输出，不是实测肌电或临床评估。
 

@@ -1,5 +1,7 @@
 name: Build and deploy static demo
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,6 +25,9 @@ jobs:
       - run: node scripts/fetch-pose-model.mjs
       - run: npm test
       - run: npm run build
+        env:
+          VITE_STATIC_SITE: '1'
+      - run: node scripts/check-pages-build.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

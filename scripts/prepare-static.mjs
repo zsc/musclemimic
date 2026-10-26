@@ -11,3 +11,5 @@ await mkdir('public/vendor/mediapipe/wasm',{recursive:true});
 await copyFile('node_modules/@mediapipe/tasks-vision/vision_bundle.mjs','public/vendor/mediapipe/vision_bundle.mjs');
 for(const file of await readdir('node_modules/@mediapipe/tasks-vision/wasm'))await copyFile('node_modules/@mediapipe/tasks-vision/wasm/'+file,'public/vendor/mediapipe/wasm/'+file);
 await copyFile('src/pose.worker.js','public/pose.worker.js');
+
+await import('./pack-assets.mjs');

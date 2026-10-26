@@ -1,6 +1,8 @@
 import * as ort from 'onnxruntime-web/webgpu';
 import {Physics} from './physics.js';
 import {RecordedPlayback} from './recorded-playback.js';
+import {loadAsset,loadJSONAsset,unpack} from './assets.js';
+let actorBytes,ortBytes;
 let recording;
 const current = () => recording || physics;
 const limit = () => recording ? recording.limit : 150;
@@ -22,19 +24,21 @@ function reset(start=10,seed=3){
 async function load(config){
   playing=false;base=config.base;backend=config.backend;
   send('progress',{text:'载入模型、参考轨迹和策略权重…'});
-  if(!physics){
-    const [m,reference,resets,p,n,mod]=await Promise.all([fetchJSON('manifest.json'),fetchJSON('reference.json'),fetchJSON('reset-states.json'),fetchJSON('policy-state.json'),buffer('noise.f32'),import(/* @vite-ignore */new URL('vendor/mujoco.js',base).href)]);
+  const loadPhysics=async()=>{
+    if(physics)return;
+    const [m,reference,resets,p,n,mod,wasmBinary,archive]=await Promise.all([
+      fetchJSON('manifest.json'),loadJSONAsset('reference',base),loadJSONAsset('resets',base),
+      fetchJSON('policy-state.json'),buffer('noise.f32'),
+      import(/* @vite-ignore */new URL('vendor/mujoco.js',base).href),loadAsset('mujoco',base),loadAsset('model',base)]);
     manifest=m;policy=p;noise=new Float32Array(n);
-    const mj=await mod.default({locateFile:name=>new URL('vendor/'+name,base).href});
+    const mj=await mod.default({wasmBinary,locateFile:name=>new URL('vendor/'+name,base).href});
     mj.FS.mkdir('/model');mj.FS.mkdir('/model/assets');
-    let completed=0;
-    // Limit connections while loading the mesh files.
-    const queue=manifest.model_files.slice();
-    await Promise.all(Array.from({length:6},async()=>{while(queue.length){const file=queue.shift();const b=new Uint8Array(await buffer(file.path));mj.FS.writeFile('/'+file.path,b);completed++;if(completed%15===0)send('progress',{text:`载入骨骼模型 ${completed}/${manifest.model_files.length}`});}}));
+    let {header,offset}=unpack(archive);
+    for(const file of header.files){mj.FS.writeFile('/'+file.path,new Uint8Array(archive,offset,file.bytes));offset+=file.bytes;}
     const model=mj.MjModel.from_xml_path('/model/model.xml');
     if(model.nq!==manifest.nq||model.nu!==manifest.nu)throw Error('Model dimension mismatch');
     physics=new Physics(mj,model,manifest,reference,resets);
-  }
+  };
   if(session){await session.release();session=null;}
   ort.env.wasm.numThreads=1;
   ort.env.wasm.wasmPaths=new URL('vendor/',base).href;
@@ -43,8 +47,13 @@ async function load(config){
     const adapter=await navigator.gpu.requestAdapter();if(!adapter)throw Error('没有可用的 WebGPU adapter；可选择 WASM CPU');
     adapterInfo={...adapter.info,vendor:adapter.info?.vendor,architecture:adapter.info?.architecture,device:adapter.info?.device,description:adapter.info?.description,isFallbackAdapter:adapter.info?.isFallbackAdapter};
   }else adapterInfo={description:'CPU · single-thread WASM'};
-  send('progress',{text:`编译 ${backend==='webgpu'?'WebGPU':'WASM CPU'} 策略，首次需要稍候…`});
-  session=await ort.InferenceSession.create(new Uint8Array(await buffer('actor.onnx')),{executionProviders:[backend],graphOptimizationLevel:'all'});
+  const loadPolicy=async()=>{
+    const [actor,wasmBinary]=await Promise.all([actorBytes??=loadAsset('actor',base),ortBytes??=loadAsset('ort',base)]);
+    ort.env.wasm.wasmBinary=wasmBinary;
+    send('progress',{text:`下载完成，编译 ${backend==='webgpu'?'WebGPU':'WASM CPU'} 策略…`});
+    session=await ort.InferenceSession.create(new Uint8Array(actor),{executionProviders:[backend],graphOptimizationLevel:'all'});
+  };
+  await Promise.all([loadPhysics(),loadPolicy()]);
   reset(config.start??10,config.seed??3);
   // Warm-up does not change the simulation or the saved running statistics.
   const warmObs=tensor(physics.observation(),[1,manifest.obs_dim]);
