@@ -7,10 +7,11 @@ try{
  const context=await browser.newContext(),page=await context.newPage({viewport:{width:1440,height:900}}),errors=[],requests=[],bad=[];
  const pending=[];let phase='cold';
  context.on('requestfinished',r=>pending.push((async()=>{const response=await r.response();requests.push({phase,url:r.url(),...(await r.sizes())});if(response.status()>=400)bad.push([r.url(),response.status()]);})()));
- page.on('pageerror',e=>errors.push(e.message));
+ page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE ERROR',e.message);});
  const begin=Date.now();await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__demo?.ready,null,{timeout:180000});
  const coldReadyMs=Date.now()-begin;
+ console.log('Cold startup',coldReadyMs,'ms');
  assert.equal(await page.locator('#input-source option').count(),1);
  assert.equal(await page.locator('#input-source').inputValue(),'example');
  await page.locator('#run').click();await page.waitForFunction(()=>window.__demo.metrics?.complete);
@@ -26,6 +27,7 @@ try{
  assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);
  assert.ok(!requests.some(r=>/\/api\//.test(r.url)));
  assert.ok(!requests.some(r=>/\/model\/assets\//.test(r.url)));
+ assert.ok(!requests.some(r=>r.phase==='warm'&&r.url.includes('/packed/')),'Packed assets must survive reload in Cache Storage');
  const result={url,coldReadyMs,warmReadyMs,errors,bad,metrics:report.metrics,requests};
  await writeFile('reports/pages-smoke.json',JSON.stringify(result,null,2));
  console.log(JSON.stringify({url,coldReadyMs,warmReadyMs,requests:requests.length,errors,metrics:report.metrics},null,2));

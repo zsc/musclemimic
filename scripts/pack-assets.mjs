@@ -4,9 +4,15 @@ import {createHash} from 'node:crypto';
 const root='public/packed';await rm(root,{recursive:true,force:true});await mkdir(root,{recursive:true});
 const assets={};
 async function save(name,data){
- const packed=gzipSync(data,{level:9}),hash=createHash('sha256').update(packed).digest('hex').slice(0,16);
- const path=`packed/${name}.${hash}.gz`;await writeFile(`public/${path}`,packed);
- assets[name]={path,bytes:packed.length,decodedBytes:data.length};
+ const parts=[];
+ const size=name==='actor'?4*1024*1024:data.length;
+ for(let offset=0;offset<data.length;offset+=size){
+  const chunk=data.subarray(offset,offset+size),packed=gzipSync(chunk,{level:9});
+  const hash=createHash('sha256').update(packed).digest('hex').slice(0,16);
+  const path=`packed/${name}.${hash}.gz`;await writeFile(`public/${path}`,packed);
+  parts.push({path,bytes:packed.length,decodedBytes:chunk.length});
+ }
+ assets[name]={parts,bytes:parts.reduce((n,p)=>n+p.bytes,0),decodedBytes:data.length};
 }
 function pack(header,chunks){
  const json=Buffer.from(JSON.stringify(header)),padded=Math.ceil(json.length/4)*4,head=Buffer.alloc(4+padded);

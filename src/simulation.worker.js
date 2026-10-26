@@ -48,7 +48,7 @@ async function load(config){
     adapterInfo={...adapter.info,vendor:adapter.info?.vendor,architecture:adapter.info?.architecture,device:adapter.info?.device,description:adapter.info?.description,isFallbackAdapter:adapter.info?.isFallbackAdapter};
   }else adapterInfo={description:'CPU · single-thread WASM'};
   const loadPolicy=async()=>{
-    const [actor,wasmBinary]=await Promise.all([actorBytes??=loadAsset('actor',base),ortBytes??=loadAsset('ort',base)]);
+    const [actor,wasmBinary]=await Promise.all([actorBytes??=loadAsset('actor',base,(done,total)=>send('progress',{text:`准备策略权重 ${(done/1e6).toFixed(1)} / ${(total/1e6).toFixed(1)} MB · 首次下载后保存在此浏览器`})),ortBytes??=loadAsset('ort',base)]);
     ort.env.wasm.wasmBinary=wasmBinary;
     send('progress',{text:`下载完成，编译 ${backend==='webgpu'?'WebGPU':'WASM CPU'} 策略…`});
     session=await ort.InferenceSession.create(new Uint8Array(actor),{executionProviders:[backend],graphOptimizationLevel:'all'});
