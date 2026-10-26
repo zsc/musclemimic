@@ -1,0 +1,487 @@
+{
+  "export_complete": true,
+  "actor_onnx_max_absolute_error": 6.198883056640625e-06,
+  "actor_onnx_tolerance": 0.0005,
+  "actor_onnx_cases": 20,
+  "model_dimensions_preserved": true,
+  "native_mujoco": "3.4.0",
+  "browser_verified": true,
+  "original_reliability_passed": 13,
+  "original_reliability_total": 15,
+  "elapsed_seconds": 8.066690457984805,
+  "device": {
+    "model": "Apple M5",
+    "os": "macOS-26.6-arm64-arm-64bit",
+    "browser": "Google Chrome 155.0.8059.86"
+  },
+  "physics_parity": {
+    "wasm": "3.17.0",
+    "native": "3.17.0",
+    "steps": 20,
+    "substeps": 5,
+    "qposMaxAbs": 1.8607337892717624e-13,
+    "qvelMaxAbs": 3.048450381015755e-12,
+    "source34QposMaxAbs": 0.00024727034155913596,
+    "arenaBytes": 67108864,
+    "maxUsedArenaBytes": 154560,
+    "warnings": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "browser": {
+    "webgpu": {
+      "passed": 13,
+      "total": 15,
+      "all_passed": false,
+      "actor": {
+        "maxAbsoluteError": 4.0531158447265625e-06,
+        "tolerance": 0.0005,
+        "passed": true
+      },
+      "timing_single_run": {
+        "policy": {
+          "p50": 3.4000000953674316,
+          "p95": 6.6000001430511475,
+          "mean": 4.014666662216187
+        },
+        "physicsAndMeasurement": {
+          "p50": 1.3999998569488525,
+          "p95": 2,
+          "mean": 1.4573333358764649
+        },
+        "controlStep": {
+          "p50": 5.099999904632568,
+          "p95": 9.300000190734863,
+          "mean": 5.707333329518636
+        },
+        "wallMs": 856.3999998569489,
+        "wallIncludesPauses": true
+      },
+      "paced_wall_seconds": 1.5035,
+      "controls": {
+        "pause": true,
+        "reset": true,
+        "mobileNoOverflow": true
+      },
+      "page_errors": [],
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "",
+        "description": "",
+        "isFallbackAdapter": false
+      },
+      "runs": [
+        {
+          "mean": 66.19920468502355,
+          "final": 93.70300284936236,
+          "rootMax": 86.5500263375285,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0
+        },
+        {
+          "mean": 60.79032129892387,
+          "final": 90.10853414383735,
+          "rootMax": 89.74629448469614,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0
+        },
+        {
+          "mean": 60.75501700220492,
+          "final": 87.51557580632209,
+          "rootMax": 74.53198327057055,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0
+        },
+        {
+          "mean": 62.15733863326073,
+          "final": 87.19980641278639,
+          "rootMax": 72.93966385153699,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0
+        },
+        {
+          "mean": 64.3787184991717,
+          "final": 100.50291727511687,
+          "rootMax": 90.6553398847599,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0
+        },
+        {
+          "mean": 68.67873492782262,
+          "final": 116.73284765488916,
+          "rootMax": 118.40714989749941,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0.05
+        },
+        {
+          "mean": 66.69688060465069,
+          "final": 106.9505426554488,
+          "rootMax": 98.4784750476937,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0.05
+        },
+        {
+          "mean": 73.6305442118021,
+          "final": 126.43790885084006,
+          "rootMax": 131.0523701441142,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0.05
+        },
+        {
+          "mean": 62.389560876068884,
+          "final": 93.63271936253432,
+          "rootMax": 86.23035995038965,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0.05
+        },
+        {
+          "mean": 72.0678649725524,
+          "final": 128.5796210695015,
+          "rootMax": 133.8636012167977,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0.05
+        },
+        {
+          "mean": 63.86235939059164,
+          "final": 113.6586400001593,
+          "rootMax": 96.0162686047973,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0.1
+        },
+        {
+          "mean": 68.20860600329048,
+          "final": 140.97284062370147,
+          "rootMax": 127.95486584951409,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0.1
+        },
+        {
+          "mean": 66.4336509363073,
+          "final": 142.98591910515012,
+          "rootMax": 119.06444030723296,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0.1
+        },
+        {
+          "mean": 72.25102743411769,
+          "final": 173.39919357029117,
+          "rootMax": 141.21227374961768,
+          "complete": true,
+          "finite": true,
+          "passed": false,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0.1
+        },
+        {
+          "mean": 68.7105259472985,
+          "final": 150.1558611906275,
+          "rootMax": 136.99359937248857,
+          "complete": true,
+          "finite": true,
+          "passed": false,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0.1
+        }
+      ],
+      "max_final_error_delta_from_native_mm": 0.25896141768141945
+    },
+    "wasm": {
+      "passed": 13,
+      "total": 15,
+      "all_passed": false,
+      "actor": {
+        "maxAbsoluteError": 5.245208740234375e-06,
+        "tolerance": 0.0005,
+        "passed": true
+      },
+      "timing_single_run": {
+        "policy": {
+          "p50": 0.7999999523162842,
+          "p95": 1.1000001430511475,
+          "mean": 0.8293333292007447
+        },
+        "physicsAndMeasurement": {
+          "p50": 1.4000000953674316,
+          "p95": 1.7000000476837158,
+          "mean": 1.4820000123977661
+        },
+        "controlStep": {
+          "p50": 2.4000000953674316,
+          "p95": 2.8999998569488525,
+          "mean": 2.5533333349227907
+        },
+        "wallMs": 383.2999999523163,
+        "wallIncludesPauses": true
+      },
+      "paced_wall_seconds": 1.4947000000476838,
+      "controls": {
+        "pause": true,
+        "reset": true,
+        "mobileNoOverflow": true
+      },
+      "page_errors": [],
+      "adapter": {
+        "description": "CPU · single-thread WASM"
+      },
+      "runs": [
+        {
+          "mean": 66.19919989022172,
+          "final": 93.70343644658045,
+          "rootMax": 86.55066005781636,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0
+        },
+        {
+          "mean": 60.79029119172982,
+          "final": 90.10860035245139,
+          "rootMax": 89.74607103524855,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0
+        },
+        {
+          "mean": 60.75498579575012,
+          "final": 87.51555684360058,
+          "rootMax": 74.5320452884321,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0
+        },
+        {
+          "mean": 62.15735755082675,
+          "final": 87.19982405188621,
+          "rootMax": 72.94006591808778,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0
+        },
+        {
+          "mean": 64.37877974152875,
+          "final": 100.50308822265892,
+          "rootMax": 90.65581549757694,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0
+        },
+        {
+          "mean": 68.67873913333733,
+          "final": 116.73288689431102,
+          "rootMax": 118.40719130944723,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0.05
+        },
+        {
+          "mean": 66.69680456448447,
+          "final": 106.95017980994427,
+          "rootMax": 98.4783321193634,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0.05
+        },
+        {
+          "mean": 73.63055636723236,
+          "final": 126.43777075968174,
+          "rootMax": 131.05245397161733,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0.05
+        },
+        {
+          "mean": 62.38957299482141,
+          "final": 93.63288745359378,
+          "rootMax": 86.23068090544595,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0.05
+        },
+        {
+          "mean": 72.06778508755067,
+          "final": 128.5792870253973,
+          "rootMax": 133.86327953925928,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0.05
+        },
+        {
+          "mean": 63.862398914685556,
+          "final": 113.65870863390383,
+          "rootMax": 96.01629416831909,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 0,
+          "start": 0.1
+        },
+        {
+          "mean": 68.20882402150183,
+          "final": 140.97406870382528,
+          "rootMax": 127.95578362779183,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 1,
+          "start": 0.1
+        },
+        {
+          "mean": 66.43387433206163,
+          "final": 142.98728047718,
+          "rootMax": 119.06588733804213,
+          "complete": true,
+          "finite": true,
+          "passed": true,
+          "step": 150,
+          "time": 1.5,
+          "seed": 2,
+          "start": 0.1
+        },
+        {
+          "mean": 72.25106274567224,
+          "final": 173.39984176889055,
+          "rootMax": 141.21272328531995,
+          "complete": true,
+          "finite": true,
+          "passed": false,
+          "step": 150,
+          "time": 1.5,
+          "seed": 3,
+          "start": 0.1
+        },
+        {
+          "mean": 68.71054096043558,
+          "final": 150.15582620757954,
+          "rootMax": 136.99346502501237,
+          "complete": true,
+          "finite": true,
+          "passed": false,
+          "step": 150,
+          "time": 1.5,
+          "seed": 4,
+          "start": 0.1
+        }
+      ],
+      "max_final_error_delta_from_native_mm": 0.2590006571032859
+    }
+  }
+}

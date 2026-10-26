@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#10171d" /><meta name="description" content="一键录制，生成并回放肌肉驱动的骨骼运动。" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" /><title>MuscleMimic · 肌骨工作台</title>
+</head>
+<body>
+<div id="app">
+  <header><a class="brand" href="./"><span class="brand-symbol">M</span>MuscleMimic <span>肌骨工作台</span></a><span class="pill" id="backend-pill">初始化…</span></header>
+  <main class="workspace">
+    <section class="input-panel" aria-label="输入与生成">
+      <div class="section-title"><h1>输入</h1><span>2 秒短片段</span></div>
+      <label class="field">来源<select id="input-source"><option value="camera">摄像头</option><option value="upload">本地视频</option><option value="example">示例视频</option></select></label>
+      <div id="input-preview" class="input-preview">
+        <div id="input-placeholder"><span class="camera-icon" aria-hidden="true">◎</span><strong>站稳，让全身入镜</strong><span>点击启动后授权摄像头<br />倒数 3 秒，自动录制 2 秒</span></div>
+        <video id="input-video" controls muted playsinline preload="metadata" hidden></video>
+        <div id="camera-panel" hidden><canvas id="camera-overlay" width="640" height="480" aria-label="摄像头与同帧姿态预览"></canvas><div id="camera-countdown" hidden></div><p id="camera-empty" hidden>等待画面…</p></div>
+        <label id="upload-zone" for="recording-file" hidden><strong>拖入视频或点击选择</strong><span>MP4 / WebM · 只处理前 2 秒</span></label>
+      </div>
+      <input id="recording-file" type="file" accept="video/*" hidden />
+      <p id="input-name" class="input-caption">固定机位 · 缓慢动作 · 至少一只脚着地</p>
+      <button id="run" class="primary">一键启动</button>
+      <div id="job-state" aria-live="polite"><div class="job-heading"><span id="job-label">准备就绪</span><span id="job-time"></span></div><progress id="recording-progress" max="100" value="0" hidden></progress><p id="recording-status" role="status">自动完成录制、处理与回放。</p></div>
+      <p class="input-note">仅本机处理，不微调。单目新动作可能跟丢或失稳，结果会显示实际误差。</p>
+      <details id="advanced"><summary>参数与诊断</summary>
+        <label class="check"><input id="camera-mirror" type="checkbox" checked />镜像预览</label>
+        <label class="check"><input id="show-muscles" type="checkbox" checked />显示肌肉路径</label>
+        <div class="experiment-options"><label class="field">随机种子<select id="seed"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label><label class="field">起点<select id="start"><option value="0">0.00 s</option><option value="0.05">0.05 s</option><option value="0.1" selected>0.10 s</option></select></label><label class="field">原始实验后端<select id="backend"><option value="webgpu">WebGPU</option><option value="wasm" selected>WASM CPU</option></select></label></div>
+        <dl class="performance"><div><dt>策略推理</dt><dd id="policy-ms">—</dd></div><div><dt>物理步进</dt><dd id="physics-ms">—</dd></div><div><dt>计算倍率</dt><dd id="realtime-factor">—</dd></div><div><dt>渲染</dt><dd id="render-fps">—</dd></div><div><dt>姿态识别</dt><dd id="camera-points">—</dd></div><div><dt>摄像头帧率</dt><dd id="camera-fps">—</dd></div><div><dt>识别延迟</dt><dd id="camera-latency">—</dd></div></dl>
+        <p id="camera-status">摄像头未开启</p><p id="device-info">控制 100 Hz · 物理 500 Hz</p><pre id="log"></pre>
+      </details>
+      <video id="camera-video" muted playsinline hidden></video>
+    </section>
+    <section id="simulation-panel" class="output-panel" aria-label="结果与回放">
+      <div class="output-heading"><label for="result-select">结果</label><select id="result-select" aria-label="切换历史结果"><option value="original">内置示例 · 原始仿真实验</option></select><span id="history-count">历史保存在本机</span><details class="result-menu"><summary aria-label="结果操作">···</summary><div><button id="export-report" disabled>下载运行记录</button><button id="delete-result" disabled>删除此结果</button></div></details></div>
+      <div id="recording-result" class="result-status"><span id="result-kind">实时仿真</span><p id="recording-summary">内置参考已就绪，点击播放；或在左侧生成你的动作。</p></div>
+      <div class="viewer-card">
+        <div id="viewport"><canvas id="scene" aria-label="视频参考与肌肉驱动骨骼，可以拖动旋转"></canvas><div class="view-label reference-label"><i></i>IK 参考</div><div class="view-label actual-label"><i></i>肌肉驱动</div><div class="video-inset"><video id="source-video" muted playsinline preload="auto"></video><span id="video-status">视频 · 同步时间</span></div><div class="legend"><span class="legend-bar"></span>肌肉激活低 → 高</div><div class="scene-help">拖动旋转 · 滚轮缩放</div><div id="loading" role="status"><div class="spinner"></div><h2 id="loading-title">准备肌骨模型</h2><p id="loading-text">正在加载…</p></div></div>
+        <div class="transport"><button id="play" aria-label="播放" disabled>▶ 播放</button><input id="seek" type="range" min="0" max="150" value="0" step="1" disabled aria-label="回放时间轴" title="生成的结果可拖动回看" /><div class="time"><b id="sim-time">0.00</b><span id="duration-label"> / 1.50 s</span></div><select id="speed" aria-label="播放速度"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option></select></div>
+        <div class="timeline" hidden><div id="progress"></div></div>
+      </div>
+      <div class="metrics-strip"><div class="metric"><span>全段平均 <small>&lt;100</small></span><strong id="mean-error">—</strong></div><div class="metric"><span>当前帧 <small>末帧 &lt;150</small></span><strong id="current-error">—</strong></div><div class="metric"><span>根部最大 <small>&lt;200</small></span><strong id="root-error">—</strong></div><div class="chart-cell"><canvas id="error-chart" width="560" height="100" aria-label="骨骼跟踪误差"></canvas><div class="chart-caption"><span>0 s</span><span id="chart-duration">1.50 s</span></div></div><span id="quality" class="status neutral">等待播放</span></div>
+      <details class="method-note"><summary>如何读结果</summary><div id="experiment-description"><p>左侧为视频 IK 参考，右侧由 354 条肌肉、重力与足地接触推进。原始实验实时计算；生成结果回放已计算的物理轨迹。</p><p>阈值按世界坐标 17 点计算，反映对拟合参考的跟随程度，不代表真实人体测量精度。没有额外根部力或中途重置。</p></div></details>
+    </section>
+  </main>
+  <footer><span>非商用研究演示 · 激活是模型输出，非实测肌电</span><span>最近 6 条可回放 · 视频与结果自动存本机</span><a href="./ATTRIBUTION.html" target="_blank" rel="noreferrer">来源与许可 ↗</a></footer>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
