@@ -1,0 +1,2 @@
+public/actor.onnx filter=lfs diff=lfs merge=lfs -text
+public/geometry.json filter=lfs diff=lfs merge=lfs -text

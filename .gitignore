@@ -6,8 +6,6 @@ inputs/
 vendor/
 dist/
 reports/
-public/actor.onnx
-public/geometry.json
 public/models/
 .internal/
 internal/
